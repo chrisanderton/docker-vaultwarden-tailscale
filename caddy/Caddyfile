@@ -1,0 +1,32 @@
+(security_header) {
+	header {
+		Content-Security-Policy "upgrade-insecure-requests"
+		#Strict-Transport-Security max-age=31536000;
+		X-Content-Type-Options nosniff;
+		X-XSS-Protection "1; mode=block;"
+		X-Robots-Tag none;
+		X-Frame-Options SAMEORIGIN;
+		Referrer-Policy no-referrer-when-downgrade;
+	}
+}
+
+(cors) {
+	@origin{args.0} header Origin {args.0}
+	header @origin{args.0} Access-Control-Allow-Origin "{args.0}"
+	header @origin{args.0} Vary Origin
+}
+
+{$FQDN} {
+	reverse_proxy /notifications/hub vaultwarden.dc:3012
+	reverse_proxy vaultwarden.dc:80
+	import security_header
+	tls {
+		issuer acme {
+			disable_http_challenge
+			disable_tlsalpn_challenge
+			email {$EMAIL}
+			dns cloudflare {$CLOUDFLARE_API_KEY}
+			resolvers 1.1.1.1
+		}
+	}
+}
