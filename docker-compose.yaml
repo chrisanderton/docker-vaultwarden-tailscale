@@ -35,11 +35,6 @@ services:
       - ./.env.aws
       - ./.env.host
       - ./.env.backup
-    environment:
-      - VAULTWARDEN_DATA=/vaultwarden/data
-      - BACKUP_DATA=/backup
-      - LOCAL_BACKUP_PRUNE_DAYS=7
-      - REMOTE_BACKUP_PRUNE_DAYS=14
       
     networks:
       - cron
@@ -77,15 +72,7 @@ services:
     env_file:
       - ./.env.email
       - ./.env.host
-    environment:
-      - IP_HEADER=X-Forwarded-For
-      - WEBSOCKET_ENABLED=true
-      - SIGNUPS_ALLOWED=false
-      - ADMIN_TOKEN= # generate admin token: openssl rand -base64 48
-      - EMERGENCY_ACCESS_ALLOWED=true
-      - INVITATIONS_ALLOWED=false
-      - DISABLE_ADMIN_TOKEN=true
-      - SIGNUPS_DOMAINS_WHITELIST=
+      - ./.env.vaultwarden
 
     hostname: "vaultwarden.dc"
     networks:
@@ -103,8 +90,7 @@ services:
 
     env_file:
       - ./.env.host
-    environment:
-      - AUTH_KEY= # https://tailscale.com/kb/1085/auth-keys/
+      - ./.env.tailscale
 
     entrypoint: /usr/bin/tailscale
 
