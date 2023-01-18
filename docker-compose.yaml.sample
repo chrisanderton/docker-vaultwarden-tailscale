@@ -1,59 +1,79 @@
-version: '3'
+version: '3.9'
 services:
   dnsmasq:
     container_name: dnsmasq
     image: ghcr.io/chrisanderton/docker-dnsmasq:v2.0.0
+    
+    volumes:
+      - hosts:/etc/host:ro
+
     command:
       - --hostsdir=/etc/host
       - --log-queries
       - --interface=*
       - --log-facility=-
       - --server=1.1.1.1
-    volumes:
-      - hosts:/etc/host:ro
+
     network_mode: service:tailscale
+    
     depends_on:
       - tailscale
+
   cron:
+    container_name: cron
     image: ghcr.io/chrisanderton/docker-crond:v2.0.0
-    container_name: cron 
     restart: unless-stopped
-    networks:
-      - cron
+    
     volumes:
       - ./cron/cloudflare.sh:/etc/periodic/5min/cloudflare:ro
       - ./cron/vaultwarden-backup.sh:/etc/periodic/daily/vaultwarden-backup:ro
       - vaultwarden-data:/vaultwarden/data:ro
       - backup-data:/backup
+
     env_file:
       - ./.env.cloudflare
       - ./.env.aws
       - ./.env.host
-      - ./.env.gpg
+      - ./.env.backup
     environment:
       - VAULTWARDEN_DATA=/vaultwarden/data
       - BACKUP_DATA=/backup
-      - RCLONE_REMOTE=:s3:##bucket name##
-      - RCLONE_ARGS=--s3-acl private --s3-bucket-acl private --s3-region eu-west-2 --s3-location-constraint eu-west-2 --s3-provider AWS --s3-env-auth
       - LOCAL_BACKUP_PRUNE_DAYS=7
       - REMOTE_BACKUP_PRUNE_DAYS=14
+      
+    networks:
+      - cron
+
   caddy:
-    image: ghcr.io/chrisanderton/docker-caddy-cloudflare:v2.6.2
     container_name: caddy
+    image: ghcr.io/chrisanderton/docker-caddy-cloudflare:v2.6.2
     restart: unless-stopped
+
     volumes:
       - caddy-data:/data
       - caddy-config:/config
       - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+
     env_file:
       - ./.env.email
       - ./.env.cloudflare
       - ./.env.host
-    network_mode: service:tailscale
+
+    hostname: "caddy.dc"
+    ports:
+      - 80:80
+      - 443:443
+    networks: 
+      - caddy
+
   vaultwarden:
-    image: vaultwarden/server:1.26.0
     container_name: vaultwarden
+    image: vaultwarden/server:1.26.0
     restart: unless-stopped
+
+    volumes:
+      - vaultwarden-data:/data
+
     env_file:
       - ./.env.email
       - ./.env.host
@@ -61,38 +81,38 @@ services:
       - IP_HEADER=X-Forwarded-For
       - WEBSOCKET_ENABLED=true
       - SIGNUPS_ALLOWED=false
-      - ADMIN_TOKEN=##openssl rand -base64 48##
+      - ADMIN_TOKEN= # generate admin token: openssl rand -base64 48
       - EMERGENCY_ACCESS_ALLOWED=true
       - INVITATIONS_ALLOWED=false
       - DISABLE_ADMIN_TOKEN=true
-      - SIGNUPS_DOMAINS_WHITELIST=##whitelist domains##
-    volumes:
-      - vaultwarden-data:/data
-    networks:
-      - tailscale
+      - SIGNUPS_DOMAINS_WHITELIST=
+
     hostname: "vaultwarden.dc"
+    networks:
+      - caddy
+
   tailscale:
     container_name: tailscale
     image: tailscale/tailscale:v1.34.2
-    ports:
-      - 80:80
-      - 443:443
+    restart: unless-stopped
+    
     volumes:
       - tailscale-data:/var/lib
       - ./tailscale/tailscale.sh:/usr/bin/tailscale:ro
       - hosts:/etc/host
+
     env_file:
       - ./.env.host
     environment:
-      - AUTH_KEY=## https://tailscale.com/kb/1085/auth-keys/ ##
+      - AUTH_KEY= # https://tailscale.com/kb/1085/auth-keys/
+
     entrypoint: /usr/bin/tailscale
-    restart: unless-stopped
-    networks:
-      - tailscale
-    hostname: "tailscale.dc"
+
+    network_mode: service:caddy
+    
 networks:
   cron:
-  tailscale:
+  caddy:
 volumes:
   tailscale-data:
   caddy-data:
