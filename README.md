@@ -13,7 +13,7 @@ The cron container is based on a [simple image](https://githubc.com/chrisanderto
 
 `./cron/vaultwarden-backup.sh` is mounted and run daily. This is another basic script that uses rclone to take a backup of the Vaultwarden data (which is also mounted to the cron container as a read-only volume). Rclone configuration is passed in the environment; the example is using AWS as the backup target.
 
-## dnsmasq
+## dnsmasq (optional: if you don't need split DNS)
 
 Uses a [dnsmasq](https://github.com/chrisanderton/docker-dnsmasq) image to provide a simple DNS resolver. Runtime configuration can be sent as the command in the compose file. 
 
@@ -46,7 +46,7 @@ Bolted on the side of caddy, running in usermode with no elevated privileges.
 
 2. I'm not hugely comfortable having Caddy and Tailscale glued together. It feels like there is some risk in having Tailscale (which is a path to my home network) accessible from Caddy which is exposed externally. Mitigation is that I have ingress quite tightly controlled but I couldn't find a better way.
 
-  * I looked at _serve_ and the proxy options, but they can only proxy from Tailscale to 127.0.0.1 at present. I didn't want to run multiple processes in the Tailscale container (it would mean running a proxy to a proxy to caddy.. too many levels)
+  * I looked at _serve_ and the proxy options, but they can only proxy from Tailscale to 127.0.0.1 at present. I didn't want to [run multiple processes](https://github.com/http403/tailscale-caddy/blob/main/entrypoint.sh) in the Tailscale container (it would mean running a proxy to a proxy to caddy.. too many levels or running Caddy in the same container as Tailscale)
   * I think pull requests [like this](https://github.com/tailscale/tailscale/pull/6521) might remove some of the limitations on serve. If implemented, Tailscale could proxy directly to Caddy without needing to be bolted on the side.
   * I looked at [https://github.com/markpash/tailscale-sidecar](tailscale-sidecar) and some other projects that looked like a good fit.. but I couldn't get them working (probably me, not them)
   
