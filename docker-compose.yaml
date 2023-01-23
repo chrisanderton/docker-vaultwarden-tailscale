@@ -25,13 +25,11 @@ services:
     restart: unless-stopped
     
     volumes:
-      - ./cron/cloudflare.sh:/etc/periodic/5min/cloudflare:ro
       - ./cron/vaultwarden-backup.sh:/etc/periodic/daily/vaultwarden-backup:ro
       - vaultwarden-data:/vaultwarden/data:ro
       - backup-data:/backup
 
     env_file:
-      - ./.env.cloudflare
       - ./.env.aws
       - ./.env.host
       - ./.env.backup
@@ -41,7 +39,7 @@ services:
 
   caddy:
     container_name: caddy
-    image: ghcr.io/chrisanderton/docker-caddy-cloudflare:v2.6.2
+    image: ghcr.io/chrisanderton/docker-caddy-cloudflare-ddns:v2.6.2
     restart: unless-stopped
 
     volumes:
@@ -56,14 +54,13 @@ services:
 
     hostname: "caddy.dc"
     ports:
-      - 80:80
       - 443:443
     networks: 
       - caddy
 
   vaultwarden:
     container_name: vaultwarden
-    image: vaultwarden/server:1.26.0
+    image: vaultwarden/server:1.27.0
     restart: unless-stopped
 
     volumes:
@@ -95,6 +92,9 @@ services:
     entrypoint: /usr/bin/tailscale
 
     network_mode: service:caddy
+
+    depends_on:
+      - caddy
     
 networks:
   cron:

@@ -1,3 +1,15 @@
+{
+	dynamic_dns {
+		provider cloudflare {$CLOUDFLARE_API_KEY}
+		domains {
+			{$DDNS_ZONE} {$DDNS_HOSTNAME}
+		}
+		check_interval 15m
+		versions ipv4
+		ttl 15m
+	}
+}
+
 (security_header) {
 	header {
 		Content-Security-Policy "upgrade-insecure-requests"

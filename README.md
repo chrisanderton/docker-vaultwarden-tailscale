@@ -5,11 +5,9 @@ I have one hostname for Vaultwarden that allows for both modes of access:
 - people on the home network can access Vaultwarden without Tailscale; GCP firewall is configured for ingress from my static IP
 - outside of the home network, people can only access Vaultwarden over Tailscale
 
-## cron (optional: if you don't need Cloudflare DDNS or backups you can comment this out)
+## cron (optional: if you don't need backups you can comment this out)
 
 The cron container is based on a [simple image](https://githubc.com/chrisanderton/docker-crond) that exposes cron from Alpine and a few utilities. You can supply a crontab file to the environment, or simply mount files to the relevant cron directory.
-
-`./cron/cloudflare.sh` is mounted and run every 5 minutes. This is a basic DDNS script for Cloudflare to set the IP of the specified hostname to the public IP address of the GCP instance. If you're not looking to access the instance outside of Tailscale, or are not using Cloudflare you can comment this out.
 
 `./cron/vaultwarden-backup.sh` is mounted and run daily. This is another basic script that uses rclone to take a backup of the Vaultwarden data (which is also mounted to the cron container as a read-only volume). Rclone configuration is passed in the environment; the example is using AWS as the backup target.
 
@@ -39,10 +37,9 @@ Also a pretty vanilla caddy setup; main difference is using DNS based ACME setup
 
 Bolted on the side of caddy, running in usermode with no elevated privileges.
 
-
 ## Other considerations
 
-1. I made some custom images and scripts for cron, dnsmasq, ddns and backups. Others do exist and I played with some of them, but couldn't get them to work how I wanted. If people have a better, simpler alternative, let me know.
+1. I made some custom images and scripts for cron, dnsmasq and backups. Others do exist and I played with some of them, but couldn't get them to work how I wanted. If people have a better, simpler alternative, let me know.
 
 2. I'm not hugely comfortable having Caddy and Tailscale glued together. It feels like there is some risk in having Tailscale (which is a path to my home network) accessible from Caddy which is exposed externally. Mitigation is that I have ingress quite tightly controlled but I couldn't find a better way.
 
