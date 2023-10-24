@@ -60,7 +60,7 @@ services:
 
   vaultwarden:
     container_name: vaultwarden
-    image: vaultwarden/server:1.28.1
+    image: vaultwarden/server:1.29.2
     restart: unless-stopped
 
     volumes:
