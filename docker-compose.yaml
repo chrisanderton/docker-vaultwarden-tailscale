@@ -2,7 +2,7 @@ version: '3.9'
 services:
   dnsmasq:
     container_name: dnsmasq
-    image: ghcr.io/chrisanderton/docker-dnsmasq:v2.8.9r5
+    image: ghcr.io/chrisanderton/docker-dnsmasq:v2.89-r6
     
     volumes:
       - hosts:/etc/host:ro
@@ -21,7 +21,7 @@ services:
 
   cron:
     container_name: cron
-    image: ghcr.io/chrisanderton/docker-crond:v2.0.1
+    image: ghcr.io/chrisanderton/docker-crond:v3.19.0
     restart: unless-stopped
     
     volumes:
@@ -39,7 +39,7 @@ services:
 
   caddy:
     container_name: caddy
-    image: ghcr.io/chrisanderton/docker-caddy-cloudflare-ddns:v2.7.5
+    image: ghcr.io/chrisanderton/docker-caddy-cloudflare-ddns:v2.7.6
     restart: unless-stopped
 
     volumes:
@@ -60,7 +60,7 @@ services:
 
   vaultwarden:
     container_name: vaultwarden
-    image: vaultwarden/server:1.29.2
+    image: vaultwarden/server:1.30.1
     restart: unless-stopped
 
     volumes:
@@ -77,7 +77,7 @@ services:
 
   tailscale:
     container_name: tailscale
-    image: tailscale/tailscale:v1.50.1
+    image: tailscale/tailscale:v1.56.1
     restart: unless-stopped
     
     volumes:
