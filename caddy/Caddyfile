@@ -29,7 +29,6 @@
 }
 
 {$FQDN} {
-	reverse_proxy /notifications/hub vaultwarden.dc:3012
 	reverse_proxy vaultwarden.dc:80
 	import security_header
 	tls {
