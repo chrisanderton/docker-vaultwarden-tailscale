@@ -77,7 +77,7 @@ services:
 
   tailscale:
     container_name: tailscale
-    image: tailscale/tailscale:v1.84.2
+    image: tailscale/tailscale:v1.86.2
     restart: unless-stopped
     
     volumes:
