@@ -39,7 +39,7 @@ services:
 
   caddy:
     container_name: caddy
-    image: ghcr.io/chrisanderton/docker-caddy-cloudflare-ddns:v2.10.0
+    image: ghcr.io/chrisanderton/docker-caddy-cloudflare-ddns:v2.10.2
     restart: unless-stopped
 
     volumes:
