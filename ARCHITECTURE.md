@@ -21,9 +21,9 @@ This setup creates a secure, multi-path access system for Vaultwarden (a Bitward
 ### High-Level Network Flow
 
 ```
-                    ┌─────────────────────────────────────────┐
-                    │              Internet               │
-                    └─────────────┬───────────────────────────┘
+                    ┌──────────────────────────────┐
+                    │         Internet             │
+                    └─────────────┬────────────────┘
                                   │
                     ┌─────────────▼────────────────┐
                     │      Cloudflare DNS/CDN      │
@@ -36,15 +36,15 @@ This setup creates a secure, multi-path access system for Vaultwarden (a Bitward
                     └─────────────┬────────────────┘
                                   │
                     ┌─────────────▼────────────────┐
-                    │          Caddy               │
-                    │    (Reverse Proxy)          │
-                    │    Port 443 HTTPS           │
+                    │           Caddy              │
+                    │      (Reverse Proxy)         │
+                    │      Port 443 HTTPS          │
                     └─────────────┬────────────────┘
                                   │
                     ┌─────────────▼────────────────┐
                     │       Vaultwarden            │
                     │     (Password Manager)       │
-                    │       Port 80 HTTP          │
+                    │       Port 80 HTTP           │
                     └──────────────────────────────┘
 ```
 
@@ -56,22 +56,22 @@ This setup creates a secure, multi-path access system for Vaultwarden (a Bitward
     │  (Tailscale  │         │      Network        │         │              │
     │   Enabled)   │         │   (WireGuard VPN)   │         │              │
     └──────────────┘         └─────────────────────┘         └──────┬───────┘
-           │                                                         │
+           │                                                        │
            │ DNS Query: vaultwarden.example.com                     │
-           │                                                         │
-           ▼                                                         ▼
+           │                                                        │
+           ▼                                                        ▼
     ┌──────────────┐                                         ┌──────────────┐
     │   dnsmasq    │◄────────────────────────────────────────┤  Tailscale   │
     │ (Split DNS)  │         Tailscale IP: 100.x.x.x         │   Daemon     │
     └──────┬───────┘                                         └──────┬───────┘
-           │                                                         │
+           │                                                        │
            │ Returns: 100.x.x.x                                     │
-           │                                                         ▼
+           │                                                        ▼
            ▼                                                 ┌──────────────┐
     ┌──────────────┐                                         │    Caddy     │
     │   Client     │─────────────────────────────────────────┤              │
-    │              │         Direct Tailscale               │              │
-    │              │         Connection                       └──────┬───────┘
+    │              │         Direct Tailscale                │              │
+    │              │         Connection                      └──────┬───────┘
     └──────────────┘         (Encrypted)                            │
                                                                     ▼
                                                             ┌──────────────┐
@@ -83,38 +83,38 @@ This setup creates a secure, multi-path access system for Vaultwarden (a Bitward
 
 ```
 Docker Host (GCP Instance)
-┌─────────────────────────────────────────────────────────────────────────┐
-│                                                                         │
-│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐         │
-│  │     dnsmasq     │  │   Tailscale     │  │     Caddy       │         │
-│  │  (DNS Server)   │  │  (VPN Client)   │  │ (Reverse Proxy) │         │
-│  │                 │  │                 │  │                 │         │
-│  │ Network Mode:   │  │ Network Mode:   │  │ Network:        │         │
-│  │ service:        │  │ service:caddy   │  │ caddy           │         │
-│  │ tailscale       │  │                 │  │ Port: 443       │         │
-│  └─────────────────┘  └─────────────────┘  └─────────────────┘         │
-│           │                     │                     │                 │
-│           │                     │                     │                 │
-│           └─────────────────────┼─────────────────────┘                 │
-│                                 │                                       │
-│  ┌─────────────────┐            │          ┌─────────────────┐         │
-│  │   Vaultwarden   │◄───────────┼──────────┤      cron       │         │
-│  │ (Password Mgr)  │            │          │   (Backups)     │         │
-│  │                 │            │          │                 │         │
-│  │ Network:        │            │          │ Network: cron   │         │
-│  │ caddy           │            │          │                 │         │
-│  │ Port: 80        │            │          │                 │         │
-│  └─────────────────┘            │          └─────────────────┘         │
-│                                 │                                       │
-│  ┌─────────────────────────────────────────────────────────────────┐   │
-│  │                     Shared Volumes                            │   │
-│  │                                                               │   │
-│  │  • hosts: Tailscale IP mappings (tailscale ↔ dnsmasq)       │   │
-│  │  • vaultwarden-data: Password database (vaultwarden ↔ cron)  │   │
-│  │  • caddy-data: TLS certificates                              │   │
-│  │  • tailscale-data: VPN state and config                      │   │
-│  └─────────────────────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│                                                                 │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐  │
+│  │     dnsmasq     │  │   Tailscale     │  │     Caddy       │  │
+│  │  (DNS Server)   │  │  (VPN Client)   │  │ (Reverse Proxy) │  │
+│  │                 │  │                 │  │                 │  │
+│  │ Network Mode:   │  │ Network Mode:   │  │ Network:        │  │
+│  │ service:        │  │ service:caddy   │  │ caddy           │  │
+│  │ tailscale       │  │                 │  │ Port: 443       │  │
+│  └─────────────────┘  └─────────────────┘  └─────────────────┘  │
+│           │                     │                     │         │
+│           │                     │                     │         │
+│           └─────────────────────┼─────────────────────┘         │
+│                                 │                               │
+│  ┌─────────────────┐            │          ┌─────────────────┐  │
+│  │   Vaultwarden   │◄───────────┼──────────┤      cron       │  │
+│  │ (Password Mgr)  │            │          │   (Backups)     │  │
+│  │                 │            │          │                 │  │
+│  │ Network:        │            │          │ Network: cron   │  │
+│  │ caddy           │            │          │                 │  │
+│  │ Port: 80        │            │          │                 │  │
+│  └─────────────────┘            │          └─────────────────┘  │
+│                                 │                               │
+│  ┌───────────────────────────────────────────────────────────┐  │
+│  │                     Shared Volumes                        │  │
+│  │                                                           │  │
+│  │  • hosts: Tailscale IP mappings (tailscale ↔ dnsmasq)     │  │
+│  │  • vaultwarden-data: Database (vaultwarden ↔ cron)        │  │
+│  │  • caddy-data: TLS certificates                           │  │
+│  │  • tailscale-data: VPN state and config                   │  │
+│  └───────────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
 ### Split-Horizon DNS Resolution
@@ -129,14 +129,14 @@ Docker Host (GCP Instance)
     ┌─────────────┐
     │   Client    │
     │   Status?   │
-    └─────┬───┬───┘
-          │   │
-    ┌─────▼─┐ └──────▼──┐
-    │Tailscale    │No Tailscale│
-    │Enabled │    │Connection │
-    └─────┬───┘    └────┬─────┘
-          │             │
-          ▼             ▼
+    └─────┬─────┬─┘
+          │     └─────────┐
+    ┌─────▼───────┐ ┌─────▼───────┐
+    │Tailscale    │ │No Tailscale │
+    │Enabled      │ │Connection   │
+    └─────┬───────┘ └────┬────────┘
+          │              │
+          ▼              ▼
     ┌─────────────┐ ┌─────────────┐
     │   dnsmasq   │ │Public DNS   │
     │(Tailscale IP│ │ Resolver    │
