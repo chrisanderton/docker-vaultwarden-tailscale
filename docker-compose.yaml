@@ -21,7 +21,7 @@ services:
 
   cron:
     container_name: cron
-    image: ghcr.io/chrisanderton/docker-crond:v3.20.0
+    image: ghcr.io/chrisanderton/docker-crond:v3.22.1
     restart: unless-stopped
     
     volumes:
