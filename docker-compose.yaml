@@ -3,6 +3,7 @@ services:
   dnsmasq:
     container_name: dnsmasq
     image: ghcr.io/chrisanderton/docker-dnsmasq:v3.24.4
+    restart: unless-stopped
     
     volumes:
       - hosts:/etc/host:ro
