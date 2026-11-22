@@ -1,0 +1,4 @@
+# Real environment files hold live credentials (Tailscale auth key, vaultwarden
+# admin token, AWS keys, GPG passphrase). Only the .example templates are tracked.
+.env.*
+!.env.*.example

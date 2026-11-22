@@ -1,10 +1,9 @@
-version: '3.9'
 services:
   dnsmasq:
     container_name: dnsmasq
     image: ghcr.io/chrisanderton/docker-dnsmasq:v3.24.4
     restart: unless-stopped
-    
+
     volumes:
       - hosts:/etc/host:ro
 
@@ -16,7 +15,7 @@ services:
       - --server=1.1.1.1
 
     network_mode: service:tailscale
-    
+
     depends_on:
       - tailscale
 
@@ -24,9 +23,18 @@ services:
     container_name: cron
     image: ghcr.io/chrisanderton/docker-crond:v3.24.4
     restart: unless-stopped
-    
+
+    # Container-Optimized OS mounts /home noexec, and bind mounts inherit the
+    # source filesystem's flags, so a script mounted from here cannot be
+    # exec'd (which is what run-parts does). Reading a file needs no exec bit,
+    # so invoke it through bash and inject the schedule via the crond image's
+    # generic CRONTAB hook. That keeps docker-crond purpose-agnostic: it never
+    # needs to know this script exists.
+    environment:
+      CRONTAB: "0 2 * * * bash /opt/vaultwarden-backup.sh"
+
     volumes:
-      - ./cron/vaultwarden-backup.sh:/etc/periodic/daily/vaultwarden-backup:ro
+      - ./cron/vaultwarden-backup.sh:/opt/vaultwarden-backup.sh:ro
       - vaultwarden-data:/vaultwarden/data:ro
       - backup-data:/backup
 
@@ -34,7 +42,7 @@ services:
       - ./.env.aws
       - ./.env.host
       - ./.env.backup
-      
+
     networks:
       - cron
 
@@ -56,7 +64,7 @@ services:
     hostname: "caddy.dc"
     ports:
       - 443:443
-    networks: 
+    networks:
       - caddy
 
   vaultwarden:
@@ -80,23 +88,27 @@ services:
     container_name: tailscale
     image: tailscale/tailscale:v1.104.7
     restart: unless-stopped
-    
+
+    # Same noexec constraint as cron: run the wrapper through ash rather than
+    # exec'ing it directly. Mounted at /opt rather than /usr/bin/tailscale so
+    # it no longer shadows the real binary, which the wrapper itself invokes
+    # via PATH -- that only worked because /usr/local/bin precedes /usr/bin.
+    entrypoint: ["/bin/ash", "/opt/ts-entrypoint.sh"]
+
     volumes:
+      - ./tailscale/tailscale.sh:/opt/ts-entrypoint.sh:ro
       - tailscale-data:/var/lib
-      - ./tailscale/tailscale.sh:/usr/bin/tailscale:ro
       - hosts:/etc/host
 
     env_file:
       - ./.env.host
       - ./.env.tailscale
 
-    entrypoint: /usr/bin/tailscale
-
     network_mode: service:caddy
 
     depends_on:
       - caddy
-    
+
 networks:
   cron:
   caddy:
